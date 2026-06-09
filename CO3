@@ -1,0 +1,87 @@
+import java.util.*;
+
+public class TopologicalSortCycle {
+
+    enum Color {
+        WHITE, GREY, BLACK
+    }
+
+    static Map<String, List<String>> graph = new HashMap<>();
+    static Map<String, Color> color = new HashMap<>();
+    static Map<String, String> parent = new HashMap<>();
+    static List<String> topo = new ArrayList<>();
+    static List<String> cycle = new ArrayList<>();
+
+    static boolean dfs(String node) {
+
+        color.put(node, Color.GREY);
+
+        for (String neigh : graph.getOrDefault(node, new ArrayList<>())) {
+
+            if (color.get(neigh) == Color.WHITE) {
+                parent.put(neigh, node);
+
+                if (dfs(neigh))
+                    return true;
+            }
+
+            else if (color.get(neigh) == Color.GREY) {
+
+                cycle.add(neigh);
+                String cur = node;
+
+                while (!cur.equals(neigh)) {
+                    cycle.add(cur);
+                    cur = parent.get(cur);
+                }
+
+                cycle.add(neigh);
+                Collections.reverse(cycle);
+
+                return true;
+            }
+        }
+
+        color.put(node, Color.BLACK);
+        topo.add(node);
+        return false;
+    }
+
+    public static void main(String[] args) {
+
+        graph.put("ledger", Arrays.asList("fraud"));
+        graph.put("fraud", Arrays.asList("notify"));
+        graph.put("notify", Arrays.asList("gateway"));
+        graph.put("gateway", Arrays.asList("admin-ui"));
+        graph.put("admin-ui", Arrays.asList("payments"));
+        graph.put("payments", Arrays.asList("auth"));
+        graph.put("auth", Arrays.asList("ledger"));
+
+        for (String v : graph.keySet())
+            color.put(v, Color.WHITE);
+
+        List<String> vertices = new ArrayList<>(graph.keySet());
+        Collections.sort(vertices);
+
+        boolean foundCycle = false;
+
+        for (String v : vertices) {
+            if (color.get(v) == Color.WHITE) {
+                if (dfs(v)) {
+                    foundCycle = true;
+                    break;
+                }
+            }
+        }
+
+        if (foundCycle) {
+            System.out.println("Cycle Detected:");
+            for (String s : cycle)
+                System.out.print(s + " ");
+        } else {
+            Collections.reverse(topo);
+            System.out.println("Topological Order:");
+            System.out.println(topo);
+        }
+    }
+}

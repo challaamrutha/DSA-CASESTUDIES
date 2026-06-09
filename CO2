@@ -1,0 +1,128 @@
+class AVLNode {
+    int timestamp;
+    int height;
+    AVLNode left, right;
+
+    AVLNode(int timestamp) {
+        this.timestamp = timestamp;
+        height = 1;
+    }
+}
+
+class AVLTree {
+    AVLNode root;
+
+    int height(AVLNode node) {
+        return (node == null) ? 0 : node.height;
+    }
+
+    int getBalance(AVLNode node) {
+        return (node == null) ? 0 : height(node.left) - height(node.right);
+    }
+
+    AVLNode rightRotate(AVLNode y) {
+        AVLNode x = y.left;
+        AVLNode T2 = x.right;
+
+        x.right = y;
+        y.left = T2;
+
+        y.height = Math.max(height(y.left), height(y.right)) + 1;
+        x.height = Math.max(height(x.left), height(x.right)) + 1;
+
+        return x;
+    }
+
+    AVLNode leftRotate(AVLNode x) {
+        AVLNode y = x.right;
+        AVLNode T2 = y.left;
+
+        y.left = x;
+        x.right = T2;
+
+        x.height = Math.max(height(x.left), height(x.right)) + 1;
+        y.height = Math.max(height(y.left), height(y.right)) + 1;
+
+        return y;
+    }
+
+    AVLNode insert(AVLNode node, int timestamp) {
+        if (node == null)
+            return new AVLNode(timestamp);
+
+        if (timestamp < node.timestamp)
+            node.left = insert(node.left, timestamp);
+        else if (timestamp > node.timestamp)
+            node.right = insert(node.right, timestamp);
+        else
+            return node;
+
+        node.height = 1 + Math.max(height(node.left), height(node.right));
+
+        int balance = getBalance(node);
+
+        // LL
+        if (balance > 1 && timestamp < node.left.timestamp)
+            return rightRotate(node);
+
+        // RR
+        if (balance < -1 && timestamp > node.right.timestamp)
+            return leftRotate(node);
+
+        // LR
+        if (balance > 1 && timestamp > node.left.timestamp) {
+            node.left = leftRotate(node.left);
+            return rightRotate(node);
+        }
+
+        // RL
+        if (balance < -1 && timestamp < node.right.timestamp) {
+            node.right = rightRotate(node.right);
+            return leftRotate(node);
+        }
+
+        return node;
+    }
+
+    void insert(int timestamp) {
+        root = insert(root, timestamp);
+    }
+
+    void printTopKDescending(AVLNode node, int[] k) {
+        if (node == null || k[0] <= 0)
+            return;
+
+        printTopKDescending(node.right, k);
+
+        if (k[0] > 0) {
+            System.out.print(node.timestamp + " ");
+            k[0]--;
+        }
+
+        printTopKDescending(node.left, k);
+    }
+
+    void getTopKRecent(int k) {
+        int[] count = {k};
+        System.out.println("\nTop " + k + " Recent Timestamps:");
+        printTopKDescending(root, count);
+    }
+}
+
+public class SpotifyAVL {
+    public static void main(String[] args) {
+
+        AVLTree tree = new AVLTree();
+
+        int[] timestamps = {
+            43200, 46800, 39600, 36000, 21600,
+            43200 + 3600, 14400, 50400
+        };
+
+        for (int t : timestamps) {
+            tree.insert(t);
+        }
+
+        tree.getTopKRecent(5);
+    }
+}
